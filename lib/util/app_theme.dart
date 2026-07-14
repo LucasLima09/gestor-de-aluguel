@@ -3,22 +3,25 @@ import 'package:flutter/material.dart';
 class AppTheme {
   AppTheme._();
 
-  static const Color _primaryColor = Color(0xFF7C4DFF);
-  static const Color _secondaryColor = Color(0xFF00E5FF);
-  static const Color _errorColor = Color(0xFFCF6679);
-  static const Color _surfaceColor = Color(0xFF161B22);
-  static const Color _backgroundColor = Color(0xFF0D1117);
-  static const Color _cardColor = Color(0xFF1C2333);
-  static const Color _appBarColor = Color(0xFF0D1117);
-  static const Color _inputFillColor = Color(0xFF1C2333);
-  static const Color _borderColor = Color(0xFF30363D);
+  static const Color _primaryColor = Color(0xFF1E88E5);
+  static const Color _secondaryColor = Color(0xFF00ACC1);
+  static const Color _errorColor = Color(0xFFE53935);
+  static const Color _backgroundColor = Color(0xFFF5F7FA);
+  static const Color _surfaceColor = Colors.white;
+  static const Color _cardColor = Colors.white;
+  static const Color _appBarColor = Colors.white;
+  static const Color _inputFillColor = Color(0xFFF0F2F5);
+  static const Color _borderColor = Color(0xFFDDE1E6);
+  static const Color _textPrimary = Color(0xFF1A1D21);
+  static const Color _textSecondary = Color(0xFF6B7280);
+  static const Color _textHint = Color(0xFF9CA3AF);
 
-  static ThemeData get darkTheme {
+  static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
       scaffoldBackgroundColor: _backgroundColor,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         primary: _primaryColor,
         secondary: _secondaryColor,
         error: _errorColor,
@@ -29,11 +32,11 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          color: Colors.white,
+          color: _textPrimary,
           fontSize: 18,
           fontWeight: FontWeight.w600,
         ),
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: _textPrimary),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -54,17 +57,17 @@ class AppTheme {
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: _errorColor),
         ),
-        labelStyle: const TextStyle(color: Color(0xFF8B949E)),
-        hintStyle: const TextStyle(color: Color(0xFF484F58)),
-        prefixIconColor: const Color(0xFF8B949E),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        labelStyle: const TextStyle(color: _textSecondary, fontSize: 15),
+        hintStyle: const TextStyle(color: _textHint, fontSize: 14),
+        prefixIconColor: _textSecondary,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: _primaryColor,
           foregroundColor: Colors.white,
           disabledBackgroundColor: _primaryColor.withValues(alpha: 0.4),
-          disabledForegroundColor: Colors.white38,
+          disabledForegroundColor: Colors.white70,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
@@ -73,15 +76,16 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
+            letterSpacing: 0.3,
           ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: _secondaryColor,
+          foregroundColor: _primaryColor,
           textStyle: const TextStyle(
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
           ),
         ),
       ),
@@ -96,12 +100,12 @@ class AppTheme {
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: _primaryColor,
         foregroundColor: Colors.white,
-        elevation: 0,
+        elevation: 2,
         shape: CircleBorder(),
       ),
       snackBarTheme: const SnackBarThemeData(
-        backgroundColor: _surfaceColor,
-        contentTextStyle: TextStyle(color: Colors.white),
+        backgroundColor: _textPrimary,
+        contentTextStyle: TextStyle(color: Colors.white, fontSize: 15),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -115,35 +119,37 @@ class AppTheme {
         headlineLarge: TextStyle(
           fontSize: 28,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: _textPrimary,
         ),
         headlineMedium: TextStyle(
-          fontSize: 24,
+          fontSize: 22,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: _textPrimary,
         ),
         titleLarge: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: _textPrimary,
         ),
         titleMedium: TextStyle(
           fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: Colors.white,
+          fontWeight: FontWeight.w600,
+          color: _textPrimary,
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
-          color: Color(0xFFC9D1D9),
+          fontWeight: FontWeight.w400,
+          color: _textPrimary,
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
-          color: Color(0xFF8B949E),
+          fontWeight: FontWeight.w400,
+          color: _textSecondary,
         ),
         labelLarge: TextStyle(
-          fontSize: 14,
+          fontSize: 15,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: _textPrimary,
         ),
       ),
     );

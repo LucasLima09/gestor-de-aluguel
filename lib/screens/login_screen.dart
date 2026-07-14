@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'AlugaAí',
+                    'AlugaLá',
                     style: theme.textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),

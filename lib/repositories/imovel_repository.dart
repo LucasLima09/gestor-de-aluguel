@@ -22,6 +22,14 @@ class ImovelRepository {
     }
   }
 
+  Future<void> deletarImovel(String imovelId) async {
+    try {
+      await _supabase.from('imoveis').delete().eq('id', imovelId);
+    } catch (e) {
+      throw Exception('Erro ao excluir imóvel: $e');
+    }
+  }
+
   Future<void> registerImovel(
     String apelido,
     String? endereco,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/imovel_model.dart';
 import '../models/locacao_model.dart';
 import '../models/mensalidade_model.dart';
+import '../repositories/imovel_repository.dart';
 import '../repositories/locacao_repository.dart';
 import '../repositories/mensalidade_repository.dart';
 import 'add_locacao_screen.dart';
@@ -16,6 +17,7 @@ class DetalhesImovelScreen extends StatefulWidget {
 }
 
 class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
+  final _imovelRepository = ImovelRepository();
   final _locacaoRepository = LocacaoRepository();
   final _mensalidadeRepository = MensalidadeRepository();
 
@@ -162,7 +164,7 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Confirmar'),
+            child: const Text('Confirmar',),
           ),
         ],
       ),
@@ -192,6 +194,13 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.imovel.apelido),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red,),
+            onPressed: _confirmarExcluirImovel,
+            tooltip: 'Excluir imóvel',
+          ),
+        ],
       ),
       body: _carregando
           ? const Center(child: CircularProgressIndicator())
@@ -286,7 +295,7 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
                                             m.nomeInquilino!,
                                             style: const TextStyle(
                                               fontSize: 12,
-                                              color: Color(0xFF8B949E),
+                                              color: Color(0xFF6B7280),
                                             ),
                                           ),
                                         ],
@@ -305,7 +314,7 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
                                     ElevatedButton(
                                       onPressed: () =>
                                           _quitarMensalidade(m.id),
-                                      child: const Text('Receber'),
+                                      child: const Text('Receber', style: TextStyle(fontSize: 14),),
                                     ),
                                 ],
                               ),
@@ -366,19 +375,64 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('$label: ', style: const TextStyle(color: Color(0xFF8B949E), fontSize: 14)),
+        Text('$label: ', style: const TextStyle(color: Color(0xFF6B7280), fontSize: 14)),
         Expanded(
           child: Text(
             value,
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: valueColor ?? Colors.white,
+              color: valueColor ?? const Color(0xFF1A1D21),
             ),
           ),
         ),
       ],
     );
+  }
+
+  Future<void> _confirmarExcluirImovel() async {
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir Imóvel'),
+        content: const Text(
+          'Tem certeza? Esta ação irá excluir o imóvel e todos os '
+          'dados relacionados (contratos e mensalidades).',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmou != true) return;
+
+    try {
+      await _imovelRepository.deletarImovel(widget.imovel.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Imóvel excluído com sucesso!')),
+        );
+        Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao excluir: $e')),
+        );
+      }
+    }
   }
 
   Widget _buildCardImovelVago(ThemeData theme) {
