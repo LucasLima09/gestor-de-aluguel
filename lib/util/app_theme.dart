@@ -69,25 +69,62 @@ class AppTheme {
           disabledBackgroundColor: _primaryColor.withValues(alpha: 0.4),
           disabledForegroundColor: Colors.white70,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          minimumSize: const Size(0, 52),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(10),
           ),
           textStyle: const TextStyle(
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.3,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: _primaryColor,
+          side: BorderSide(color: _primaryColor.withValues(alpha: 0.4)),
+          minimumSize: const Size(0, 52),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: _primaryColor,
+          minimumSize: const Size(0, 40),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           textStyle: const TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
         ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: _surfaceColor,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        titleTextStyle: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: _textPrimary,
+        ),
+        contentTextStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: _textSecondary,
+          height: 1.5,
+        ),
+        actionsPadding: EdgeInsets.zero,
       ),
       cardTheme: CardThemeData(
         color: _cardColor,

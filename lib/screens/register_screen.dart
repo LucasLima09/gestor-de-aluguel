@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../repositories/auth_repository.dart';
+import '../widgets/app_buttons.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -170,15 +171,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
                 const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: _loading
-                      ? const Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                          onPressed: _register,
-                          child: const Text('Criar Conta'),
-                        ),
-                ),
+                _loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : AppPrimaryButton(
+                        label: 'Criar Conta',
+                        onPressed: _register,
+                      ),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

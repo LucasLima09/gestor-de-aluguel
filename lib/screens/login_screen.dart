@@ -2,6 +2,7 @@ import 'package:alugaai/screens/dashboard_screen.dart';
 import 'package:alugaai/screens/register_screen.dart';
 import 'package:flutter/material.dart';
 import '../repositories/auth_repository.dart';
+import '../widgets/app_buttons.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -132,15 +133,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                   const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    child: _loading
-                        ? const Center(child: CircularProgressIndicator())
-                        : ElevatedButton(
-                            onPressed: _signIn,
-                            child: const Text('Entrar'),
-                          ),
-                  ),
+                  _loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : AppPrimaryButton(
+                          label: 'Entrar',
+                          onPressed: _signIn,
+                        ),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,

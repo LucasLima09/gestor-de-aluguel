@@ -5,6 +5,10 @@ import '../models/mensalidade_model.dart';
 import '../repositories/imovel_repository.dart';
 import '../repositories/locacao_repository.dart';
 import '../repositories/mensalidade_repository.dart';
+import '../services/cobranca_pdf_service.dart';
+import '../util/app_button_styles.dart';
+import '../widgets/app_buttons.dart';
+import '../widgets/app_dialog.dart';
 import 'add_locacao_screen.dart';
 
 class DetalhesImovelScreen extends StatefulWidget {
@@ -20,6 +24,7 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
   final _imovelRepository = ImovelRepository();
   final _locacaoRepository = LocacaoRepository();
   final _mensalidadeRepository = MensalidadeRepository();
+  final _cobrancaPdfService = CobrancaPdfService();
 
   bool _carregando = true;
   LocacaoModel? _locacaoAtiva;
@@ -40,8 +45,8 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
 
       List<MensalidadeModel> mensalidadesTemp = [];
       if (locacao != null) {
-        mensalidadesTemp =
-            await _mensalidadeRepository.buscarMensalidadesPorLocacao(locacao.id);
+        mensalidadesTemp = await _mensalidadeRepository
+            .buscarMensalidadesPorLocacao(locacao.id);
       }
 
       setState(() {
@@ -50,9 +55,9 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar dados: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao carregar dados: $e')));
       }
     } finally {
       if (mounted) setState(() => _carregando = false);
@@ -62,10 +67,12 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
   Future<void> _dialogGerarMensalidade() async {
     if (_locacaoAtiva == null) return;
 
-    final mesController =
-        TextEditingController(text: DateTime.now().month.toString());
-    final anoController =
-        TextEditingController(text: DateTime.now().year.toString());
+    final mesController = TextEditingController(
+      text: DateTime.now().month.toString(),
+    );
+    final anoController = TextEditingController(
+      text: DateTime.now().year.toString(),
+    );
     final valorController = TextEditingController(
       text: widget.imovel.valorBaseAluguel.toStringAsFixed(2),
     );
@@ -76,15 +83,14 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
         title: const Text('Cobrar Mensalidade'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: mesController,
-                    decoration: const InputDecoration(
-                      labelText: 'Mês (1-12)',
-                    ),
+                    decoration: const InputDecoration(labelText: 'Mês (1-12)'),
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -92,9 +98,7 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
                 Expanded(
                   child: TextField(
                     controller: anoController,
-                    decoration: const InputDecoration(
-                      labelText: 'Ano',
-                    ),
+                    decoration: const InputDecoration(labelText: 'Ano'),
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -106,68 +110,123 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
               decoration: const InputDecoration(
                 labelText: 'Valor da Cobrança (R\$)',
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+            ),
+            const SizedBox(height: 24),
+            AppDialogActions(
+              cancelLabel: 'Cancelar',
+              confirmLabel: 'Gerar',
+              onCancel: () => Navigator.pop(context),
+              onConfirm: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                final navigator = Navigator.of(context);
+
+                try {
+                  final novaMensalidade = MensalidadeModel(
+                    id: '',
+                    userId: _locacaoAtiva!.userId,
+                    locacaoId: _locacaoAtiva!.id,
+                    mesReferencia: int.parse(mesController.text),
+                    anoReferencia: int.parse(anoController.text),
+                    valor: double.parse(
+                      valorController.text.replaceAll(',', '.'),
+                    ),
+                    pago: false,
+                    nomeInquilino: _locacaoAtiva!.nomeInquilino,
+                    criadoEm: DateTime.now(),
+                  );
+
+                  await _mensalidadeRepository.gerarMensalidade(
+                    novaMensalidade,
+                  );
+
+                  if (!context.mounted) return;
+                  navigator.pop();
+                  await _carregarDados();
+
+                  if (!mounted) return;
+                  try {
+                    await _compartilharPdfCobranca(novaMensalidade);
+                  } catch (e) {
+                    if (mounted) {
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Não foi possível abrir o compartilhamento: $e',
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    messenger.showSnackBar(SnackBar(content: Text('Erro: $e')));
+                  }
+                }
+              },
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                final novaMensalidade = MensalidadeModel(
-                  id: '',
-                  userId: _locacaoAtiva!.userId,
-                  locacaoId: _locacaoAtiva!.id,
-                  mesReferencia: int.parse(mesController.text),
-                  anoReferencia: int.parse(anoController.text),
-                  valor: double.parse(valorController.text.replaceAll(',', '.')),
-                  pago: false,
-                  nomeInquilino: _locacaoAtiva!.nomeInquilino,
-                  criadoEm: DateTime.now(),
-                );
-
-                await _mensalidadeRepository.gerarMensalidade(novaMensalidade);
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  _carregarDados();
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Erro: $e')),
-                  );
-                }
-              }
-            },
-            child: const Text('Gerar'),
-          ),
-        ],
       ),
     );
   }
 
-  Future<void> _quitarMensalidade(String id) async {
-    final confirmou = await showDialog<bool>(
+  Future<void> _compartilharPdfCobranca(MensalidadeModel mensalidade) async {
+    if (_locacaoAtiva == null) return;
+
+    await _cobrancaPdfService.compartilhar(
+      nomeInquilino: mensalidade.nomeInquilino ?? _locacaoAtiva!.nomeInquilino,
+      valor: mensalidade.valor,
+      mesReferencia: mensalidade.mesReferencia,
+      anoReferencia: mensalidade.anoReferencia,
+      diaVencimento: _locacaoAtiva!.diaVencimento,
+      imovel: widget.imovel.apelido,
+    );
+  }
+
+  Future<void> _confirmarExcluirMensalidade(
+    MensalidadeModel mensalidade,
+  ) async {
+    if (mensalidade.pago) return;
+
+    final referencia =
+        '${mensalidade.mesReferencia.toString().padLeft(2, '0')}/${mensalidade.anoReferencia}';
+    final confirmou = await showAppConfirmDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar Pagamento'),
-        content: const Text('Confirmar que esta mensalidade foi paga?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Confirmar',),
-          ),
-        ],
-      ),
+      title: 'Excluir Cobrança',
+      message:
+          'Excluir a cobrança de $referencia no valor de '
+          'R\$ ${mensalidade.valor.toStringAsFixed(2)}? '
+          'Esta ação não pode ser desfeita.',
+      confirmLabel: 'Excluir',
+      isDestructive: true,
+    );
+
+    if (confirmou != true) return;
+
+    try {
+      await _mensalidadeRepository.excluirMensalidade(mensalidade.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cobrança excluída com sucesso!')),
+      );
+      _carregarDados();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  Future<void> _quitarMensalidade(String id) async {
+    final confirmou = await showAppConfirmDialog(
+      context: context,
+      title: 'Confirmar Pagamento',
+      message: 'Confirmar que esta mensalidade foi paga?',
+      confirmLabel: 'Confirmar',
     );
 
     if (confirmou != true) return;
@@ -181,9 +240,9 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
       _carregarDados();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -196,7 +255,7 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
         title: Text(widget.imovel.apelido),
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red,),
+            icon: const Icon(Icons.delete, color: Colors.red),
             onPressed: _confirmarExcluirImovel,
             tooltip: 'Excluir imóvel',
           ),
@@ -223,9 +282,10 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
                           'Mensalidades',
                           style: theme.textTheme.titleMedium,
                         ),
-                        TextButton.icon(
+                        OutlinedButton.icon(
                           onPressed: _dialogGerarMensalidade,
-                          icon: const Icon(Icons.add),
+                          style: AppButtonStyles.outlinedCompact(context),
+                          icon: const Icon(Icons.add, size: 18),
                           label: const Text('Gerar Cobrança'),
                         ),
                       ],
@@ -260,17 +320,16 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: (pago
-                                              ? Colors.green
-                                              : Colors.orange)
-                                          .withValues(alpha: 0.1),
+                                      color:
+                                          (pago ? Colors.green : Colors.orange)
+                                              .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Icon(
-                                      pago
-                                          ? Icons.check_circle
-                                          : Icons.pending,
-                                      color: pago ? Colors.green : Colors.orange,
+                                      pago ? Icons.check_circle : Icons.pending,
+                                      color: pago
+                                          ? Colors.green
+                                          : Colors.orange,
                                       size: 20,
                                     ),
                                   ),
@@ -302,20 +361,58 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
                                       ],
                                     ),
                                   ),
-                                  if (pago)
-                                    Text(
-                                      'PAGO',
-                                      style: TextStyle(
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.bold,
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        onPressed: () async {
+                                          final messenger =
+                                              ScaffoldMessenger.of(context);
+
+                                          try {
+                                            await _compartilharPdfCobranca(m);
+                                          } catch (e) {
+                                            if (!mounted) return;
+                                            messenger.showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  'Não foi possível abrir o compartilhamento: $e',
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                        icon: const Icon(
+                                          Icons.picture_as_pdf_outlined,
+                                        ),
+                                        tooltip: 'Compartilhar PDF',
                                       ),
-                                    )
-                                  else
-                                    ElevatedButton(
-                                      onPressed: () =>
-                                          _quitarMensalidade(m.id),
-                                      child: const Text('Receber', style: TextStyle(fontSize: 14),),
-                                    ),
+                                      if (!pago)
+                                        IconButton(
+                                          onPressed: () =>
+                                              _confirmarExcluirMensalidade(m),
+                                          icon: Icon(
+                                            Icons.delete_outline,
+                                            color: Colors.red.shade400,
+                                          ),
+                                          tooltip: 'Excluir cobrança',
+                                        ),
+                                      if (pago)
+                                        Text(
+                                          'PAGO',
+                                          style: TextStyle(
+                                            color: Colors.green,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )
+                                      else
+                                        AppCompactButton(
+                                          label: 'Receber',
+                                          onPressed: () =>
+                                              _quitarMensalidade(m.id),
+                                        ),
+                                    ],
+                                  ),
                                 ],
                               ),
                             ),
@@ -351,10 +448,7 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Dados do Imóvel',
-                  style: theme.textTheme.titleMedium,
-                ),
+                Text('Dados do Imóvel', style: theme.textTheme.titleMedium),
               ],
             ),
             const Divider(height: 28),
@@ -375,7 +469,10 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('$label: ', style: const TextStyle(color: Color(0xFF6B7280), fontSize: 14)),
+        Text(
+          '$label: ',
+          style: const TextStyle(color: Color(0xFF6B7280), fontSize: 14),
+        ),
         Expanded(
           child: Text(
             value,
@@ -391,29 +488,14 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
   }
 
   Future<void> _confirmarExcluirImovel() async {
-    final confirmou = await showDialog<bool>(
+    final confirmou = await showAppConfirmDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Excluir Imóvel'),
-        content: const Text(
+      title: 'Excluir Imóvel',
+      message:
           'Tem certeza? Esta ação irá excluir o imóvel e todos os '
           'dados relacionados (contratos e mensalidades).',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Excluir',
+      isDestructive: true,
     );
 
     if (confirmou != true) return;
@@ -428,9 +510,9 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao excluir: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao excluir: $e')));
       }
     }
   }
@@ -447,7 +529,11 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
                 color: Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.info_outline, size: 40, color: Colors.orange),
+              child: const Icon(
+                Icons.info_outline,
+                size: 40,
+                color: Colors.orange,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
@@ -465,22 +551,19 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  final contratoIniciado = await Navigator.of(context).push<bool>(
-                    MaterialPageRoute(
-                      builder: (_) => AddLocacaoScreen(imovel: widget.imovel),
-                    ),
-                  );
-                  if (contratoIniciado == true) {
-                    _carregarDados();
-                  }
-                },
-                icon: const Icon(Icons.vpn_key),
-                label: const Text('Alugar Imóvel'),
-              ),
+            AppPrimaryButton(
+              label: 'Alugar Imóvel',
+              icon: Icons.vpn_key,
+              onPressed: () async {
+                final contratoIniciado = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(
+                    builder: (_) => AddLocacaoScreen(imovel: widget.imovel),
+                  ),
+                );
+                if (contratoIniciado == true) {
+                  _carregarDados();
+                }
+              },
             ),
           ],
         ),
@@ -503,7 +586,11 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
                     color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.person_outline, color: Colors.green, size: 20),
+                  child: const Icon(
+                    Icons.person_outline,
+                    color: Colors.green,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -528,17 +615,9 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
               '${locacao.dataInicio.day}/${locacao.dataInicio.month}/${locacao.dataInicio.year}',
             ),
             const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => _confirmarEncerrarContrato(locacao.id),
-                icon: const Icon(Icons.cancel_outlined),
-                label: const Text('Encerrar Contrato'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red.shade300,
-                  side: BorderSide(color: Colors.red.shade800),
-                ),
-              ),
+            AppOutlinedDangerButton(
+              label: 'Encerrar Contrato',
+              onPressed: () => _confirmarEncerrarContrato(locacao.id),
             ),
           ],
         ),
@@ -547,29 +626,14 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
   }
 
   Future<void> _confirmarEncerrarContrato(String locacaoId) async {
-    final confirmou = await showDialog<bool>(
+    final confirmou = await showAppConfirmDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Encerrar Contrato'),
-        content: const Text(
+      title: 'Encerrar Contrato',
+      message:
           'Tem certeza? O contrato será encerrado e o imóvel ficará vago. '
           'As mensalidades serão mantidas no histórico.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Encerrar'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Encerrar',
+      isDestructive: true,
     );
 
     if (confirmou != true) return;
@@ -584,9 +648,9 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao encerrar: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao encerrar: $e')));
       }
     }
   }

@@ -3,6 +3,7 @@ import '../models/imovel_model.dart';
 import '../models/locacao_model.dart';
 import '../repositories/auth_repository.dart';
 import '../repositories/locacao_repository.dart';
+import '../widgets/app_buttons.dart';
 
 class AddLocacaoScreen extends StatefulWidget {
   final ImovelModel imovel;
@@ -164,15 +165,12 @@ class _AddLocacaoScreenState extends State<AddLocacaoScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: _carregando
-                      ? const Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                          onPressed: _salvarContrato,
-                          child: const Text('Confirmar Contrato'),
-                        ),
-                ),
+                _carregando
+                    ? const Center(child: CircularProgressIndicator())
+                    : AppPrimaryButton(
+                        label: 'Confirmar Contrato',
+                        onPressed: _salvarContrato,
+                      ),
               ],
             ),
           ),

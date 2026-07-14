@@ -33,9 +33,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _logout() async {
     await _authRepository.logout();
     if (mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
     }
   }
 
@@ -68,7 +68,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+                    Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: theme.colorScheme.error,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'Erro ao carregar dados',
@@ -95,7 +99,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.home_outlined, size: 64, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
+                    Icon(
+                      Icons.home_outlined,
+                      size: 64,
+                      color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'Nenhum imóvel cadastrado',
@@ -124,14 +132,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
               itemBuilder: (context, index) {
                 final imovel = imoveis[index];
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
                   child: Card(
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
                       onTap: () async {
                         await Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => DetalhesImovelScreen(imovel: imovel),
+                            builder: (_) =>
+                                DetalhesImovelScreen(imovel: imovel),
                           ),
                         );
                         _recarregar();
@@ -143,7 +155,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
@@ -162,7 +176,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    imovel.endereco ?? 'Sem endereço cadastrado',
+                                    imovel.endereco ??
+                                        'Sem endereço cadastrado',
                                     style: theme.textTheme.bodyMedium,
                                   ),
                                 ],
@@ -180,7 +195,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             const SizedBox(width: 8),
                             Icon(
                               Icons.chevron_right,
-                              color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.5,
+                              ),
                             ),
                           ],
                         ),

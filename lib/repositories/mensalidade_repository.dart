@@ -39,4 +39,12 @@ class MensalidadeRepository {
       throw Exception('Erro ao confirmar pagamento: $e');
     }
   }
+
+  Future<void> excluirMensalidade(String mensalidadeId) async {
+    try {
+      await _supabase.from('mensalidades').delete().eq('id', mensalidadeId);
+    } catch (e) {
+      throw Exception('Erro ao excluir mensalidade: $e');
+    }
+  }
 }

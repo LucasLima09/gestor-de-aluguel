@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../repositories/imovel_repository.dart';
+import '../widgets/app_buttons.dart';
 
 class AddImovelScreen extends StatefulWidget {
   const AddImovelScreen({super.key});
@@ -113,15 +114,12 @@ class _AddImovelScreenState extends State<AddImovelScreen> {
                   },
                 ),
                 const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: _carregando
-                      ? const Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                          onPressed: _salvar,
-                          child: const Text('Salvar Imóvel'),
-                        ),
-                ),
+                _carregando
+                    ? const Center(child: CircularProgressIndicator())
+                    : AppPrimaryButton(
+                        label: 'Salvar Imóvel',
+                        onPressed: _salvar,
+                      ),
               ],
             ),
           ),
