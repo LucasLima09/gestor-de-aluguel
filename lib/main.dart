@@ -1,3 +1,4 @@
+import 'package:alugaai/screens/dashboard_screen.dart';
 import 'package:alugaai/screens/login_screen.dart';
 import 'package:alugaai/util/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -21,11 +22,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final session = Supabase.instance.client.auth.currentSession;
+
     return MaterialApp(
       title: "Gestor de Aluguéis",
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const LoginScreen(),
+      home: session != null ? const DashboardScreen() : const LoginScreen(),
     );
   }
 }

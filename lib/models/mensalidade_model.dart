@@ -7,8 +7,11 @@ class MensalidadeModel {
   final double valor;
   final bool pago;
   final DateTime? dataPagamento;
-  final String? nomeInquilino;
+  String? nomeInquilino;
   final DateTime criadoEm;
+
+  DateTime? dataVencimento;
+  String? nomeImovel;
 
   MensalidadeModel({
     required this.id,
@@ -21,6 +24,8 @@ class MensalidadeModel {
     this.dataPagamento,
     this.nomeInquilino,
     required this.criadoEm,
+    this.dataVencimento,
+    this.nomeImovel,
   });
 
   factory MensalidadeModel.fromJson(Map<String, dynamic> json) {
