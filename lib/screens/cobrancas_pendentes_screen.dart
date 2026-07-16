@@ -96,12 +96,14 @@ class CobrancasPendentesScreen extends StatelessWidget {
   Widget _buildItem(
       BuildContext context, MensalidadeModel m, ThemeData tema) {
     final hoje = DateTime.now();
+    final hojeSemHora = DateTime(hoje.year, hoje.month, hoje.day);
     final vencimento = m.dataVencimento!;
-    final diasAtraso = vencimento.isBefore(hoje)
-        ? hoje.difference(vencimento).inDays
+    final vencimentoSemHora = DateTime(vencimento.year, vencimento.month, vencimento.day);
+    final diasAtraso = vencimentoSemHora.isBefore(hojeSemHora)
+        ? hojeSemHora.difference(vencimentoSemHora).inDays
         : 0;
-    final diasParaVencer = vencimento.isAfter(hoje)
-        ? vencimento.difference(hoje).inDays
+    final diasParaVencer = vencimentoSemHora.isAfter(hojeSemHora)
+        ? vencimentoSemHora.difference(hojeSemHora).inDays
         : 0;
 
     final String status;
