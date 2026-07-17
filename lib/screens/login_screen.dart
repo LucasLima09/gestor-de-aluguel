@@ -1,5 +1,5 @@
-import 'package:alugaai/screens/dashboard_screen.dart';
-import 'package:alugaai/screens/register_screen.dart';
+import 'package:alugala/screens/dashboard_screen.dart';
+import 'package:alugala/screens/register_screen.dart';
 import 'package:flutter/material.dart';
 import '../repositories/auth_repository.dart';
 import '../widgets/app_buttons.dart';
@@ -66,29 +66,8 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(
-                      Icons.maps_home_work,
-                      size: 48,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'AlugaLá',
-                    style: theme.textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Gestão profissional de aluguéis',
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 48),
+                  Image.asset("assets/images/logo_alugala.png", height: 200, width: 200),
+                  const SizedBox(height: 35),
                   TextFormField(
                     controller: _emailController,
                     decoration: const InputDecoration(

@@ -1,6 +1,6 @@
-import 'package:alugaai/screens/dashboard_screen.dart';
-import 'package:alugaai/screens/login_screen.dart';
-import 'package:alugaai/util/app_theme.dart';
+import 'package:alugala/screens/dashboard_screen.dart';
+import 'package:alugala/screens/login_screen.dart';
+import 'package:alugala/util/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
     final session = Supabase.instance.client.auth.currentSession;
 
     return MaterialApp(
-      title: "Gestor de Aluguéis",
+      title: "AlugaLá",
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: session != null ? const DashboardScreen() : const LoginScreen(),

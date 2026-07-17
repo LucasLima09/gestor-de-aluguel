@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "alugaai" "\0"
+            VALUE "FileDescription", "alugala" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "alugaai" "\0"
+            VALUE "InternalName", "alugala" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "alugaai.exe" "\0"
-            VALUE "ProductName", "alugaai" "\0"
+            VALUE "OriginalFilename", "alugala.exe" "\0"
+            VALUE "ProductName", "alugala" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

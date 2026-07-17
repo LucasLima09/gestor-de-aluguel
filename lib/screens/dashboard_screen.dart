@@ -1,6 +1,6 @@
-import 'package:alugaai/screens/add_imovel_screen.dart';
-import 'package:alugaai/screens/cobrancas_pendentes_screen.dart';
-import 'package:alugaai/screens/imovel_details_screen.dart';
+import 'package:alugala/screens/add_imovel_screen.dart';
+import 'package:alugala/screens/cobrancas_pendentes_screen.dart';
+import 'package:alugala/screens/imovel_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/imovel_model.dart';

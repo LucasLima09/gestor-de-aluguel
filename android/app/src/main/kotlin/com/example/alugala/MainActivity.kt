@@ -1,4 +1,4 @@
-package com.example.alugaai
+package com.example.alugala
 
 import io.flutter.embedding.android.FlutterActivity
 

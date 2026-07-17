@@ -1,11 +1,11 @@
 {
-    "name": "alugaai",
-    "short_name": "alugaai",
+    "name": "AlugaLá",
+    "short_name": "AlugaLá",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "AlugaLá — acompanhamento de aluguéis e cobranças.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
