@@ -32,11 +32,11 @@ O **AlugaLá** ajuda proprietários e gestores a:
 
 | Tela | Preview |
 |------|---------|
-| Login | ![Login](docs/screenshots/login.png) |
-| Dashboard / Meus Imóveis | ![Dashboard](docs/screenshots/dashboard.png) |
-| Detalhes do imóvel | ![Detalhes](docs/screenshots/imovel-detalhes.png) |
-| Cobranças pendentes | ![Pendências](docs/screenshots/cobrancas-pendentes.png) |
-| PDF de cobrança | ![PDF](docs/screenshots/pdf-cobranca.png) |
+| Login | <img src="assets/images/imagesReadme/Screenshot_1785415620.png" width="250"> |
+| Dashboard / Meus Imóveis | <img src="assets/images/imagesReadme/Screenshot_1785415897.png" width="250"> |
+| Detalhes do imóvel | <img src="assets/images/imagesReadme/Screenshot_1785415921.png" width="250"> |
+| Cobranças pendentes | <img src="assets/images/imagesReadme/Screenshot_1785415930.png" width="250"> |
+| PDF de cobrança | <img src="assets/images/imagesReadme/Screenshot_1785416056.png" width="250"> |
 
 ---
 
