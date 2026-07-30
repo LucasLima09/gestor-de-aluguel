@@ -27,9 +27,13 @@ class CobrancaPdfService {
     return '${mes.toString().padLeft(2, '0')}/$ano';
   }
 
-  Future<pw.MemoryImage> _carregarLogo() async {
-    final data = await rootBundle.load('assets/images/logo_alugala.png');
-    return pw.MemoryImage(data.buffer.asUint8List());
+  Future<pw.MemoryImage?> _carregarLogo() async {
+    try {
+      final data = await rootBundle.load('assets/images/logo_alugala.png');
+      return pw.MemoryImage(data.buffer.asUint8List());
+    } catch (_) {
+      return null; // Trata suavemente se a imagem não for encontrada
+    }
   }
 
   Future<Uint8List> gerarBytes({
@@ -43,46 +47,127 @@ class CobrancaPdfService {
     final logo = await _carregarLogo();
     final dataEmissao = DateTime.now();
 
+    // Definição de Cores Profissionais
+    final primaryColor = PdfColor.fromHex('#1E293B'); // Azul escuro / Grafite
+    final accentColor = PdfColor.fromHex('#2563EB');  // Azul vibrante
+    final backgroundColor = PdfColor.fromHex('#F8FAFC'); // Cinza bem claro
+    final borderColor = PdfColor.fromHex('#E2E8F0');
+
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
         build: (context) => pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
           children: [
-            pw.Image(logo, height: 80),
-            pw.SizedBox(height: 12),
-            pw.Center(
-              child: pw.Text(
-                'Cobrança de Aluguel',
-                style: pw.TextStyle(
-                  fontSize: 22,
-                  fontWeight: pw.FontWeight.bold,
+            // CABEÇALHO (Logo + Título)
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: pw.CrossAxisAlignment.center,
+              children: [
+                if (logo != null)
+                  pw.Image(logo, height: 60)
+                else
+                  pw.Text(
+                    'ALUGALA',
+                    style: pw.TextStyle(
+                      fontSize: 22,
+                      fontWeight: pw.FontWeight.bold,
+                      color: primaryColor,
+                    ),
+                  ),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text(
+                      'COBRANÇA DE ALUGUEL',
+                      style: pw.TextStyle(
+                        fontSize: 18,
+                        fontWeight: pw.FontWeight.bold,
+                        color: primaryColor,
+                      ),
+                    ),
+                    pw.SizedBox(height: 4),
+                    pw.Text(
+                      'Referência: $referencia',
+                      style: pw.TextStyle(
+                        fontSize: 12,
+                        color: PdfColors.grey700,
+                      ),
+                    ),
+                  ],
                 ),
+              ],
+            ),
+
+            pw.SizedBox(height: 16),
+            pw.Divider(color: borderColor, thickness: 1),
+            pw.SizedBox(height: 20),
+
+            // CARD DE INFORMAÇÕES PRINCIPAIS
+            pw.Container(
+              padding: const pw.EdgeInsets.all(16),
+              decoration: pw.BoxDecoration(
+                color: backgroundColor,
+                borderRadius: pw.BorderRadius.circular(8),
+                border: pw.Border.all(color: borderColor),
+              ),
+              child: pw.Column(
+                children: [
+                  _linhaInformacao('Inquilino:', nomeInquilino, isBold: true),
+                  if (imovel != null) ...[
+                    pw.SizedBox(height: 8),
+                    _linhaInformacao('Imóvel:', imovel),
+                  ],
+                  pw.SizedBox(height: 8),
+                  _linhaInformacao('Data de Emissão:', _formatarData(dataEmissao)),
+                  pw.SizedBox(height: 8),
+                  _linhaInformacao('Vencimento:', _formatarData(vencimento), isHighlight: true),
+                ],
               ),
             ),
-            pw.SizedBox(height: 8),
-            pw.Center(
-              child: pw.Text(
-                'Referência: $referencia',
-                style: pw.TextStyle(fontSize: 14),
+
+            pw.SizedBox(height: 24),
+
+            // DESTAQUE DO VALOR TOTAL
+            pw.Container(
+              padding: const pw.EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              decoration: pw.BoxDecoration(
+                color: primaryColor,
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(
+                    'VALOR TOTAL',
+                    style: pw.TextStyle(
+                      fontSize: 14,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.white,
+                    ),
+                  ),
+                  pw.Text(
+                    'R\$ ${valor.toStringAsFixed(2)}',
+                    style: pw.TextStyle(
+                      fontSize: 22,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
-            pw.SizedBox(height: 30),
-            pw.Center(
-              child: _tabelaExcel([
-                ['Inquilino', nomeInquilino],
-                if (imovel != null) ['Imóvel', imovel],
-                ['Data de Emissão', _formatarData(dataEmissao)],
-                ['Vencimento', _formatarData(vencimento)],
-              ]),
-            ),
-            pw.SizedBox(height: 40),
+
+            pw.Spacer(),
+
+            // RODAPÉ PROFISSIONAL
             pw.Center(
               child: pw.Text(
-                'Valor Total: R\$ ${valor.toStringAsFixed(2)}',
+                'Documento gerado automaticamente pelo sistema Alugala.',
                 style: pw.TextStyle(
-                  fontSize: 24,
-                  fontWeight: pw.FontWeight.bold,
+                  fontSize: 10,
+                  color: PdfColors.grey500,
                 ),
               ),
             ),
@@ -94,31 +179,32 @@ class CobrancaPdfService {
     return pdf.save();
   }
 
-  pw.Widget _tabelaExcel(List<List<String>> linhas) {
-    return pw.TableHelper.fromTextArray(
-      headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-      cellStyle: const pw.TextStyle(fontSize: 12),
-      cellAlignment: pw.Alignment.center,
-      headerAlignment: pw.Alignment.center,
-      cellHeight: 30,
-      headerHeight: 35,
-      columnWidths: {
-        0: const pw.FlexColumnWidth(2),
-        1: const pw.FlexColumnWidth(5),
-      },
-      headerDecoration: pw.BoxDecoration(
-        color: PdfColors.grey200,
-      ),
-      border: pw.TableBorder(
-        horizontalInside: pw.BorderSide(color: PdfColors.grey400),
-        verticalInside: pw.BorderSide(color: PdfColors.grey400),
-        left: pw.BorderSide(color: PdfColors.grey400),
-        right: pw.BorderSide(color: PdfColors.grey400),
-        top: pw.BorderSide(color: PdfColors.grey400),
-        bottom: pw.BorderSide(color: PdfColors.grey400),
-      ),
-      headers: ['Campo', 'Valor'],
-      data: linhas,
+  // Widget auxiliar para as linhas de informação do Card
+  pw.Widget _linhaInformacao(
+    String rotulo,
+    String valor, {
+    bool isBold = false,
+    bool isHighlight = false,
+  }) {
+    return pw.Row(
+      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+      children: [
+        pw.Text(
+          rotulo,
+          style: pw.TextStyle(
+            fontSize: 12,
+            color: PdfColors.grey700,
+          ),
+        ),
+        pw.Text(
+          valor,
+          style: pw.TextStyle(
+            fontSize: 12,
+            fontWeight: (isBold || isHighlight) ? pw.FontWeight.bold : pw.FontWeight.normal,
+            color: isHighlight ? PdfColors.red700 : PdfColors.black,
+          ),
+        ),
+      ],
     );
   }
 

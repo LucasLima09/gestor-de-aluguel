@@ -313,107 +313,119 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
 
                           return Card(
                             margin: const EdgeInsets.symmetric(vertical: 4),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          (pago ? Colors.green : Colors.orange)
-                                              .withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(12), side: BorderSide.none),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  left: BorderSide(
+                                    color: (pago ? Colors.green : Colors.orange),
+                                    width: 4
+                                  )
+                                ),
+                                borderRadius: BorderRadius.circular(12)
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            (pago ? Colors.green : Colors.orange)
+                                                .withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        pago ? Icons.check_circle : Icons.pending,
+                                        color: pago
+                                            ? Colors.green
+                                            : Colors.orange,
+                                        size: 20,
+                                      ),
                                     ),
-                                    child: Icon(
-                                      pago ? Icons.check_circle : Icons.pending,
-                                      color: pago
-                                          ? Colors.green
-                                          : Colors.orange,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${m.mesReferencia.toString().padLeft(2, '0')}/${m.anoReferencia}',
-                                          style: theme.textTheme.titleMedium,
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'R\$ ${m.valor.toStringAsFixed(2)}',
-                                          style: theme.textTheme.bodyMedium,
-                                        ),
-                                        if (m.nomeInquilino != null) ...[
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${m.mesReferencia.toString().padLeft(2, '0')}/${m.anoReferencia}',
+                                            style: theme.textTheme.titleMedium,
+                                          ),
                                           const SizedBox(height: 2),
                                           Text(
-                                            m.nomeInquilino!,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Color(0xFF6B7280),
-                                            ),
+                                            'R\$ ${m.valor.toStringAsFixed(2)}',
+                                            style: theme.textTheme.bodyMedium,
                                           ),
+                                          if (m.nomeInquilino != null) ...[
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              m.nomeInquilino!,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Color(0xFF6B7280),
+                                              ),
+                                            ),
+                                          ],
                                         ],
+                                      ),
+                                    ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          onPressed: () async {
+                                            final messenger =
+                                                ScaffoldMessenger.of(context);
+                              
+                                            try {
+                                              await _compartilharPdfCobranca(m);
+                                            } catch (e) {
+                                              if (!mounted) return;
+                                              messenger.showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    'Não foi possível abrir o compartilhamento: $e',
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          icon: const Icon(
+                                            Icons.picture_as_pdf_outlined,
+                                          ),
+                                          tooltip: 'Compartilhar PDF',
+                                        ),
+                                        if (!pago)
+                                          IconButton(
+                                            onPressed: () =>
+                                                _confirmarExcluirMensalidade(m),
+                                            icon: Icon(
+                                              Icons.delete_outline,
+                                              color: Colors.red.shade400,
+                                            ),
+                                            tooltip: 'Excluir cobrança',
+                                          ),
+                                        if (pago)
+                                          Text(
+                                            'PAGO',
+                                            style: TextStyle(
+                                              color: Colors.green,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          )
+                                        else
+                                          AppCompactButton(
+                                            label: 'Receber',
+                                            onPressed: () =>
+                                                _quitarMensalidade(m.id),
+                                          ),
                                       ],
                                     ),
-                                  ),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        onPressed: () async {
-                                          final messenger =
-                                              ScaffoldMessenger.of(context);
-
-                                          try {
-                                            await _compartilharPdfCobranca(m);
-                                          } catch (e) {
-                                            if (!mounted) return;
-                                            messenger.showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'Não foi possível abrir o compartilhamento: $e',
-                                                ),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                        icon: const Icon(
-                                          Icons.picture_as_pdf_outlined,
-                                        ),
-                                        tooltip: 'Compartilhar PDF',
-                                      ),
-                                      if (!pago)
-                                        IconButton(
-                                          onPressed: () =>
-                                              _confirmarExcluirMensalidade(m),
-                                          icon: Icon(
-                                            Icons.delete_outline,
-                                            color: Colors.red.shade400,
-                                          ),
-                                          tooltip: 'Excluir cobrança',
-                                        ),
-                                      if (pago)
-                                        Text(
-                                          'PAGO',
-                                          style: TextStyle(
-                                            color: Colors.green,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        )
-                                      else
-                                        AppCompactButton(
-                                          label: 'Receber',
-                                          onPressed: () =>
-                                              _quitarMensalidade(m.id),
-                                        ),
-                                    ],
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           );
