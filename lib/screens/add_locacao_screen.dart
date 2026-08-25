@@ -7,8 +7,9 @@ import '../widgets/app_buttons.dart';
 
 class AddLocacaoScreen extends StatefulWidget {
   final ImovelModel imovel;
+  final LocacaoModel? locacao;
 
-  const AddLocacaoScreen({super.key, required this.imovel});
+  const AddLocacaoScreen({super.key, required this.imovel, this.locacao});
 
   @override
   State<AddLocacaoScreen> createState() => _AddLocacaoScreenState();
@@ -24,6 +25,20 @@ class _AddLocacaoScreenState extends State<AddLocacaoScreen> {
   final _authRepository = AuthRepository();
   bool _carregando = false;
   DateTime _dataInicioSelected = DateTime.now();
+
+  bool get _isEditing => widget.locacao != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final locacao = widget.locacao;
+    if (locacao != null) {
+      _nomeController.text = locacao.nomeInquilino;
+      _whatsappController.text = locacao.whatsappInquilino ?? '';
+      _vencimentoController.text = locacao.diaVencimento.toString();
+      _dataInicioSelected = locacao.dataInicio;
+    }
+  }
 
   Future<void> _selecionarDataInicio(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -48,8 +63,8 @@ class _AddLocacaoScreenState extends State<AddLocacaoScreen> {
       final userId = _authRepository.currentUser();
       if (userId == null) throw Exception('Usuário não autenticado');
 
-      final novaLocacao = LocacaoModel(
-        id: '',
+      final locacao = LocacaoModel(
+        id: widget.locacao?.id ?? '',
         userId: userId,
         imovelId: widget.imovel.id,
         nomeInquilino: _nomeController.text.trim(),
@@ -59,14 +74,24 @@ class _AddLocacaoScreenState extends State<AddLocacaoScreen> {
         diaVencimento: int.parse(_vencimentoController.text.trim()),
         dataInicio: _dataInicioSelected,
         ativo: true,
-        criadoEm: DateTime.now(),
+        criadoEm: widget.locacao?.criadoEm ?? DateTime.now(),
       );
 
-      await _locacaoRepository.cadastrarLocacao(novaLocacao);
+      if (_isEditing) {
+        await _locacaoRepository.atualizarLocacao(locacao);
+      } else {
+        await _locacaoRepository.cadastrarLocacao(locacao);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Contrato de aluguel iniciado!')),
+          SnackBar(
+            content: Text(
+              _isEditing
+                  ? 'Dados do inquilino atualizados!'
+                  : 'Contrato de aluguel iniciado!',
+            ),
+          ),
         );
         Navigator.of(context).pop(true);
       }
@@ -95,7 +120,7 @@ class _AddLocacaoScreenState extends State<AddLocacaoScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Novo Contrato'),
+        title: Text(_isEditing ? 'Alterar Inquilino' : 'Novo Contrato'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -168,7 +193,9 @@ class _AddLocacaoScreenState extends State<AddLocacaoScreen> {
                 _carregando
                     ? const Center(child: CircularProgressIndicator())
                     : AppPrimaryButton(
-                        label: 'Confirmar Contrato',
+                        label: _isEditing
+                            ? 'Salvar Alterações'
+                            : 'Confirmar Contrato',
                         onPressed: _salvarContrato,
                       ),
               ],

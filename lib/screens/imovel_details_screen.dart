@@ -9,6 +9,7 @@ import '../services/cobranca_pdf_service.dart';
 import '../util/app_button_styles.dart';
 import '../widgets/app_buttons.dart';
 import '../widgets/app_dialog.dart';
+import 'add_imovel_screen.dart';
 import 'add_locacao_screen.dart';
 
 class DetalhesImovelScreen extends StatefulWidget {
@@ -26,6 +27,7 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
   final _mensalidadeRepository = MensalidadeRepository();
   final _cobrancaPdfService = CobrancaPdfService();
 
+  late ImovelModel _imovel;
   bool _carregando = true;
   LocacaoModel? _locacaoAtiva;
   List<MensalidadeModel> _mensalidades = [];
@@ -33,6 +35,7 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
   @override
   void initState() {
     super.initState();
+    _imovel = widget.imovel;
     _carregarDados();
   }
 
@@ -40,7 +43,7 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
     setState(() => _carregando = true);
     try {
       final locacao = await _locacaoRepository.buscarLocacaoAtivaPorImovel(
-        widget.imovel.id,
+        _imovel.id,
       );
 
       List<MensalidadeModel> mensalidadesTemp = [];
@@ -74,7 +77,7 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
       text: DateTime.now().year.toString(),
     );
     final valorController = TextEditingController(
-      text: widget.imovel.valorBaseAluguel.toStringAsFixed(2),
+      text: _imovel.valorBaseAluguel.toStringAsFixed(2),
     );
 
     showDialog(
@@ -182,7 +185,7 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
       mesReferencia: mensalidade.mesReferencia,
       anoReferencia: mensalidade.anoReferencia,
       diaVencimento: _locacaoAtiva!.diaVencimento,
-      imovel: widget.imovel.apelido,
+      imovel: _imovel.apelido,
     );
   }
 
@@ -252,8 +255,13 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.imovel.apelido),
+        title: Text(_imovel.apelido),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: _alterarImovel,
+            tooltip: 'Alterar imóvel',
+          ),
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.red),
             onPressed: _confirmarExcluirImovel,
@@ -464,11 +472,11 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
               ],
             ),
             const Divider(height: 28),
-            _infoRow('Endereço', widget.imovel.endereco ?? 'Não informado'),
+            _infoRow('Endereço', _imovel.endereco ?? 'Não informado'),
             const SizedBox(height: 8),
             _infoRow(
               'Aluguel Sugerido',
-              'R\$ ${widget.imovel.valorBaseAluguel.toStringAsFixed(2)}',
+              'R\$ ${_imovel.valorBaseAluguel.toStringAsFixed(2)}',
               valueColor: theme.colorScheme.secondary,
             ),
           ],
@@ -499,6 +507,26 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
     );
   }
 
+  Future<void> _alterarImovel() async {
+    final atualizou = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => AddImovelScreen(imovel: _imovel)),
+    );
+
+    if (atualizou != true || !mounted) return;
+
+    try {
+      final atualizado = await _imovelRepository.buscarImovelPorId(_imovel.id);
+      if (mounted) {
+        setState(() => _imovel = atualizado);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao atualizar dados: $e')));
+    }
+  }
+
   Future<void> _confirmarExcluirImovel() async {
     final confirmou = await showAppConfirmDialog(
       context: context,
@@ -513,7 +541,7 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
     if (confirmou != true) return;
 
     try {
-      await _imovelRepository.deletarImovel(widget.imovel.id);
+      await _imovelRepository.deletarImovel(_imovel.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Imóvel excluído com sucesso!')),
@@ -569,7 +597,7 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
               onPressed: () async {
                 final contratoIniciado = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(
-                    builder: (_) => AddLocacaoScreen(imovel: widget.imovel),
+                    builder: (_) => AddLocacaoScreen(imovel: _imovel),
                   ),
                 );
                 if (contratoIniciado == true) {
@@ -605,13 +633,24 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Inquilino Ativo',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.green.shade300,
+                Expanded(
+                  child: Text(
+                    'Inquilino Ativo',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.green.shade300,
+                    ),
                   ),
+                ),
+                IconButton(
+                  onPressed: () => _alterarInquilino(locacao),
+                  icon: Icon(
+                    Icons.edit_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
+                  tooltip: 'Alterar inquilino',
+                  visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
@@ -635,6 +674,18 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _alterarInquilino(LocacaoModel locacao) async {
+    final atualizou = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => AddLocacaoScreen(imovel: _imovel, locacao: locacao),
+      ),
+    );
+
+    if (atualizou == true) {
+      _carregarDados();
+    }
   }
 
   Future<void> _confirmarEncerrarContrato(String locacaoId) async {

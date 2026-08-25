@@ -19,7 +19,10 @@ class LocacaoRepository {
               'nome_inquilino': locacao.nomeInquilino,
               'whatsapp_inquilino': locacao.whatsappInquilino,
               'dia_vencimento': locacao.diaVencimento,
-              'data_inicio': locacao.dataInicio.toIso8601String().substring(0, 10),
+              'data_inicio': locacao.dataInicio.toIso8601String().substring(
+                0,
+                10,
+              ),
               'ativo': true,
             })
             .eq('id', existente['id']);
@@ -44,6 +47,25 @@ class LocacaoRepository {
       return LocacaoModel.fromJson(response);
     } catch (e) {
       throw Exception('Erro ao buscar locação ativa: $e');
+    }
+  }
+
+  Future<void> atualizarLocacao(LocacaoModel locacao) async {
+    try {
+      await _supabase
+          .from('locacoes')
+          .update({
+            'nome_inquilino': locacao.nomeInquilino,
+            'whatsapp_inquilino': locacao.whatsappInquilino,
+            'dia_vencimento': locacao.diaVencimento,
+            'data_inicio': locacao.dataInicio.toIso8601String().substring(
+              0,
+              10,
+            ),
+          })
+          .eq('id', locacao.id);
+    } catch (e) {
+      throw Exception('Erro ao atualizar contrato: $e');
     }
   }
 
