@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/mensalidade_model.dart';
+import '../util/moeda_br.dart';
 
 class CobrancasPendentesScreen extends StatelessWidget {
   final List<MensalidadeModel> pendencias;
@@ -34,7 +35,7 @@ class CobrancasPendentesScreen extends StatelessWidget {
                     color: Colors.orange.shade700),
                 const SizedBox(width: 12),
                 Text(
-                  '${pendencias.length} pendente(s) • R\$ ${totalValor.toStringAsFixed(2)}',
+                  '${pendencias.length} pendente(s) • ${MoedaBr.reais(totalValor)}',
                   style: tema.textTheme.titleMedium?.copyWith(
                     color: Colors.orange.shade900,
                     fontWeight: FontWeight.w600,
@@ -156,7 +157,7 @@ class CobrancasPendentesScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  'R\$ ${m.valor.toStringAsFixed(2)}',
+                  MoedaBr.reais(m.valor),
                   style: tema.textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),

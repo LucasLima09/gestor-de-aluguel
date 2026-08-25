@@ -1,9 +1,8 @@
-import 'dart:typed_data';
-
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import '../util/moeda_br.dart';
 
 class CobrancaPdfService {
   static DateTime calcularVencimento(
@@ -49,7 +48,6 @@ class CobrancaPdfService {
 
     // Definição de Cores Profissionais
     final primaryColor = PdfColor.fromHex('#1E293B'); // Azul escuro / Grafite
-    final accentColor = PdfColor.fromHex('#2563EB');  // Azul vibrante
     final backgroundColor = PdfColor.fromHex('#F8FAFC'); // Cinza bem claro
     final borderColor = PdfColor.fromHex('#E2E8F0');
 
@@ -148,7 +146,7 @@ class CobrancaPdfService {
                     ),
                   ),
                   pw.Text(
-                    'R\$ ${valor.toStringAsFixed(2)}',
+                    MoedaBr.reais(valor),
                     style: pw.TextStyle(
                       fontSize: 22,
                       fontWeight: pw.FontWeight.bold,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/mensalidade_model.dart';
+import '../util/moeda_br.dart';
 
 class PendenciasBanner extends StatelessWidget {
   final List<MensalidadeModel> pendencias;
@@ -60,7 +61,7 @@ class PendenciasBanner extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'R\$ ${totalValor.toStringAsFixed(2)}',
+                        MoedaBr.reais(totalValor),
                         style: tema.textTheme.bodyLarge?.copyWith(
                           color: Colors.orange.shade800,
                           fontWeight: FontWeight.w500,
