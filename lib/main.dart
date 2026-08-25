@@ -1,4 +1,4 @@
-import 'package:alugala/screens/dashboard_screen.dart';
+import 'package:alugala/screens/home_shell.dart';
 import 'package:alugala/screens/login_screen.dart';
 import 'package:alugala/util/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
       title: "AlugaLá",
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: session != null ? const DashboardScreen() : const LoginScreen(),
+      home: session != null ? const HomeShell() : const LoginScreen(),
     );
   }
 }

@@ -1,4 +1,4 @@
-import 'package:alugala/screens/dashboard_screen.dart';
+import 'package:alugala/screens/home_shell.dart';
 import 'package:alugala/screens/register_screen.dart';
 import 'package:flutter/material.dart';
 import '../repositories/auth_repository.dart';
@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+          MaterialPageRoute(builder: (_) => const HomeShell()),
         );
       }
     } catch (e) {

@@ -134,6 +134,27 @@ class AppTheme {
           side: const BorderSide(color: _borderColor, width: 1),
         ),
       ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: _surfaceColor,
+        indicatorColor: _primaryColor.withValues(alpha: 0.12),
+        elevation: 0,
+        height: 68,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return TextStyle(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            color: selected ? _primaryColor : _textSecondary,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            size: 24,
+            color: selected ? _primaryColor : _textSecondary,
+          );
+        }),
+      ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: _primaryColor,
         foregroundColor: Colors.white,
