@@ -2,12 +2,14 @@ import 'package:alugala/screens/add_imovel_screen.dart';
 import 'package:alugala/screens/cobrancas_pendentes_screen.dart';
 import 'package:alugala/screens/imovel_details_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/imovel_model.dart';
 import '../models/mensalidade_model.dart';
 import '../repositories/imovel_repository.dart';
 import '../repositories/mensalidade_repository.dart';
 import '../repositories/auth_repository.dart';
+import '../widgets/app_dialog.dart';
 import '../widgets/pendencias_banner.dart';
 import 'login_screen.dart';
 
@@ -50,6 +52,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
       Navigator.of(
         context,
       ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+    }
+  }
+
+  Future<void> _alterarImovel(ImovelModel imovel) async {
+    final atualizou = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => AddImovelScreen(imovel: imovel)),
+    );
+
+    if (atualizou == true) {
+      _recarregar();
+    }
+  }
+
+  Future<void> _excluirImovel(ImovelModel imovel) async {
+    final confirmou = await showAppConfirmDialog(
+      context: context,
+      title: 'Excluir Imóvel',
+      message:
+          'Excluir "${imovel.apelido}"? Esta ação irá excluir o imóvel e todos os '
+          'dados relacionados (contratos e mensalidades).',
+      confirmLabel: 'Excluir',
+      isDestructive: true,
+    );
+
+    if (confirmou != true) return;
+
+    try {
+      await _imovelRepository.deletarImovel(imovel.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Imóvel excluído com sucesso!')),
+      );
+      _recarregar();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao excluir: $e')));
     }
   }
 
@@ -169,87 +209,120 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _recarregar();
                     await Future.wait([_futureImoveis, _futurePendencias]);
                   },
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: imoveis.length,
-                    itemBuilder: (context, index) {
-                      final imovel = imoveis[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 4,
-                        ),
-                        child: Card(
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () async {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      DetalhesImovelScreen(imovel: imovel),
+                  child: SlidableAutoCloseBehavior(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: imoveis.length,
+                      itemBuilder: (context, index) {
+                        final imovel = imoveis[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          child: Slidable(
+                            key: ValueKey(imovel.id),
+                            endActionPane: ActionPane(
+                              motion: const DrawerMotion(),
+                              extentRatio: 0.52,
+                              children: [
+                                SlidableAction(
+                                  onPressed: (_) => _alterarImovel(imovel),
+                                  backgroundColor: theme.colorScheme.primary,
+                                  foregroundColor: Colors.white,
+                                  icon: Icons.edit_outlined,
+                                  label: 'Alterar',
+                                  borderRadius: const BorderRadius.horizontal(
+                                    left: Radius.circular(12),
+                                  ),
                                 ),
-                              );
-                              _recarregar();
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.primary.withValues(
-                                        alpha: 0.1,
+                                SlidableAction(
+                                  onPressed: (_) => _excluirImovel(imovel),
+                                  backgroundColor: theme.colorScheme.error,
+                                  foregroundColor: Colors.white,
+                                  icon: Icons.delete_outline,
+                                  label: 'Excluir',
+                                  borderRadius: const BorderRadius.horizontal(
+                                    right: Radius.circular(12),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            child: Card(
+                              margin: EdgeInsets.zero,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () async {
+                                  await Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          DetalhesImovelScreen(imovel: imovel),
+                                    ),
+                                  );
+                                  _recarregar();
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primary
+                                              .withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.home_outlined,
+                                          color: theme.colorScheme.primary,
+                                        ),
                                       ),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Icon(
-                                      Icons.home_outlined,
-                                      color: theme.colorScheme.primary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          imovel.apelido,
-                                          style: theme.textTheme.titleMedium,
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              imovel.apelido,
+                                              style:
+                                                  theme.textTheme.titleMedium,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              imovel.endereco ??
+                                                  'Sem endereço cadastrado',
+                                              style: theme.textTheme.bodyMedium,
+                                            ),
+                                          ],
                                         ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          imovel.endereco ??
-                                              'Sem endereço cadastrado',
-                                          style: theme.textTheme.bodyMedium,
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Text(
+                                        'R\$ ${imovel.valorBaseAluguel.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: theme.colorScheme.secondary,
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Icon(
+                                        Icons.chevron_right,
+                                        color: theme.colorScheme.primary
+                                            .withValues(alpha: 0.5),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 16),
-                                  Text(
-                                    'R\$ ${imovel.valorBaseAluguel.toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: theme.colorScheme.secondary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Icon(
-                                    Icons.chevron_right,
-                                    color: theme.colorScheme.primary.withValues(
-                                      alpha: 0.5,
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 );
               },

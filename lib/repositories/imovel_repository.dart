@@ -22,6 +22,39 @@ class ImovelRepository {
     }
   }
 
+  Future<ImovelModel> buscarImovelPorId(String imovelId) async {
+    try {
+      final response = await _supabase
+          .from('imoveis')
+          .select()
+          .eq('id', imovelId)
+          .single();
+      return ImovelModel.fromJson(response);
+    } catch (e) {
+      throw Exception('Erro ao buscar imóvel: $e');
+    }
+  }
+
+  Future<void> atualizarImovel(
+    String imovelId,
+    String apelido,
+    String? endereco,
+    double valorBase,
+  ) async {
+    try {
+      await _supabase
+          .from('imoveis')
+          .update({
+            'apelido': apelido,
+            'endereco': endereco,
+            'valor_base_aluguel': valorBase,
+          })
+          .eq('id', imovelId);
+    } catch (e) {
+      throw Exception('Erro ao atualizar imóvel: $e');
+    }
+  }
+
   Future<void> deletarImovel(String imovelId) async {
     try {
       await _supabase.from('imoveis').delete().eq('id', imovelId);

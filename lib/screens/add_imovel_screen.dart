@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import '../models/imovel_model.dart';
 import '../repositories/imovel_repository.dart';
 import '../widgets/app_buttons.dart';
 
 class AddImovelScreen extends StatefulWidget {
-  const AddImovelScreen({super.key});
+  const AddImovelScreen({super.key, this.imovel});
+
+  final ImovelModel? imovel;
 
   @override
   State<AddImovelScreen> createState() => _AddImovelScreenState();
@@ -18,6 +21,19 @@ class _AddImovelScreenState extends State<AddImovelScreen> {
   final _imovelRepository = ImovelRepository();
   bool _carregando = false;
 
+  bool get _isEditing => widget.imovel != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final imovel = widget.imovel;
+    if (imovel != null) {
+      _apelidoController.text = imovel.apelido;
+      _enderecoController.text = imovel.endereco ?? '';
+      _valorController.text = imovel.valorBaseAluguel.toStringAsFixed(2);
+    }
+  }
+
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -31,11 +47,26 @@ class _AddImovelScreenState extends State<AddImovelScreen> {
 
       final valor = double.parse(_valorController.text.replaceAll(',', '.').trim());
 
-      await _imovelRepository.registerImovel(apelido, endereco, valor);
+      if (_isEditing) {
+        await _imovelRepository.atualizarImovel(
+          widget.imovel!.id,
+          apelido,
+          endereco,
+          valor,
+        );
+      } else {
+        await _imovelRepository.registerImovel(apelido, endereco, valor);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Imóvel cadastrado com sucesso!')),
+          SnackBar(
+            content: Text(
+              _isEditing
+                  ? 'Imóvel atualizado com sucesso!'
+                  : 'Imóvel cadastrado com sucesso!',
+            ),
+          ),
         );
         Navigator.of(context).pop(true);
       }
@@ -62,7 +93,7 @@ class _AddImovelScreenState extends State<AddImovelScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Novo Imóvel'),
+        title: Text(_isEditing ? 'Alterar Imóvel' : 'Novo Imóvel'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
@@ -117,7 +148,9 @@ class _AddImovelScreenState extends State<AddImovelScreen> {
                 _carregando
                     ? const Center(child: CircularProgressIndicator())
                     : AppPrimaryButton(
-                        label: 'Salvar Imóvel',
+                        label: _isEditing
+                            ? 'Salvar Alterações'
+                            : 'Salvar Imóvel',
                         onPressed: _salvar,
                       ),
               ],
