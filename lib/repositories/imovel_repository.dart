@@ -35,19 +35,25 @@ class ImovelRepository {
     }
   }
 
-  Future<void> atualizarImovel(
-    String imovelId,
-    String apelido,
-    String? endereco,
-    double valorBase,
-  ) async {
+  Future<void> atualizarImovel({
+    required String imovelId,
+    required String apelido,
+    required String? endereco,
+    required ImovelTipo tipo,
+    required double valorBaseAluguel,
+    required double? valorVenda,
+    required double? valorMensalVenda,
+  }) async {
     try {
       await _supabase
           .from('imoveis')
           .update({
             'apelido': apelido,
             'endereco': endereco,
-            'valor_base_aluguel': valorBase,
+            'tipo': tipo.dbValue,
+            'valor_base_aluguel': valorBaseAluguel,
+            'valor_venda': valorVenda,
+            'valor_mensal_venda': valorMensalVenda,
           })
           .eq('id', imovelId);
     } catch (e) {
@@ -63,11 +69,14 @@ class ImovelRepository {
     }
   }
 
-  Future<void> registerImovel(
-    String apelido,
-    String? endereco,
-    double valorBase,
-  ) async {
+  Future<void> registerImovel({
+    required String apelido,
+    required String? endereco,
+    required ImovelTipo tipo,
+    required double valorBaseAluguel,
+    required double? valorVenda,
+    required double? valorMensalVenda,
+  }) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) throw Exception("Usuário não autenticado");
@@ -76,7 +85,10 @@ class ImovelRepository {
         'user_id': userId,
         'apelido': apelido,
         'endereco': endereco,
-        'valor_base_aluguel': valorBase,
+        'tipo': tipo.dbValue,
+        'valor_base_aluguel': valorBaseAluguel,
+        'valor_venda': valorVenda,
+        'valor_mensal_venda': valorMensalVenda,
       });
     } catch (e) {
       throw Exception('Erro ao salvar imóvel: $e');

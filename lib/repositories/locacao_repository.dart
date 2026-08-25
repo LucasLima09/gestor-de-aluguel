@@ -50,6 +50,25 @@ class LocacaoRepository {
     }
   }
 
+  Future<List<LocacaoModel>> buscarLocacoesAtivas() async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) throw Exception('Usuário não autenticado');
+
+      final response = await _supabase
+          .from('locacoes')
+          .select()
+          .eq('user_id', userId)
+          .eq('ativo', true);
+
+      return (response as List)
+          .map((json) => LocacaoModel.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Erro ao buscar locações ativas: $e');
+    }
+  }
+
   Future<void> atualizarLocacao(LocacaoModel locacao) async {
     try {
       await _supabase
