@@ -172,21 +172,6 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
                   if (!context.mounted) return;
                   navigator.pop();
                   await _carregarDados();
-
-                  if (!mounted) return;
-                  try {
-                    await _compartilharPdfCobranca(novaMensalidade);
-                  } catch (e) {
-                    if (mounted) {
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Não foi possível abrir o compartilhamento: $e',
-                          ),
-                        ),
-                      );
-                    }
-                  }
                 } catch (e) {
                   if (context.mounted) {
                     messenger.showSnackBar(SnackBar(content: Text('Erro: $e')));
@@ -308,22 +293,25 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
       ),
       body: _carregando
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildInfoCard(theme),
-                  const SizedBox(height: 16),
-                  _locacaoAtiva == null
-                      ? _buildCardImovelVago(theme)
-                      : _buildCardInquilinoAtivo(theme, _locacaoAtiva!),
-                  const SizedBox(height: 16),
-                  if (_imovel.isVenda)
-                    ..._buildVendaContent(theme)
-                  else if (_locacaoAtiva != null)
-                    _buildMensalidadesSection(theme),
-                ],
+          : Padding(
+              padding: const EdgeInsets.only(bottom: 40),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildInfoCard(theme),
+                    const SizedBox(height: 16),
+                    _locacaoAtiva == null
+                        ? _buildCardImovelVago(theme)
+                        : _buildCardInquilinoAtivo(theme, _locacaoAtiva!),
+                    const SizedBox(height: 16),
+                    if (_imovel.isVenda)
+                      ..._buildVendaContent(theme)
+                    else if (_locacaoAtiva != null)
+                      _buildMensalidadesSection(theme),
+                  ],
+                ),
               ),
             ),
     );
@@ -336,10 +324,7 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Mensalidades',
-              style: theme.textTheme.titleMedium,
-            ),
+            Text('Mensalidades', style: theme.textTheme.titleMedium),
             OutlinedButton.icon(
               onPressed: _dialogGerarMensalidade,
               style: AppButtonStyles.outlinedCompact(context),
@@ -792,7 +777,10 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Acompanhamento da venda', style: theme.textTheme.titleMedium),
+              Text(
+                'Acompanhamento da venda',
+                style: theme.textTheme.titleMedium,
+              ),
               const Divider(height: 28),
               _infoRow(
                 'Total pago',
@@ -1036,21 +1024,6 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
                   if (!context.mounted) return;
                   navigator.pop();
                   await _carregarDados();
-
-                  if (!mounted) return;
-                  try {
-                    await _compartilharPdfParcela(novaParcela);
-                  } catch (e) {
-                    if (mounted) {
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Não foi possível abrir o compartilhamento: $e',
-                          ),
-                        ),
-                      );
-                    }
-                  }
                 } catch (e) {
                   if (context.mounted) {
                     messenger.showSnackBar(SnackBar(content: Text('Erro: $e')));
