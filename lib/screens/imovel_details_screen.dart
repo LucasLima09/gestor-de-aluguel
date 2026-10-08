@@ -51,32 +51,20 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
   Future<void> _carregarDados() async {
     setState(() => _carregando = true);
     try {
-      final locacao = await _locacaoRepository.buscarLocacaoAtivaPorImovel(
-        _imovel.id,
-      );
+      final results = await Future.wait([
+        _locacaoRepository.buscarLocacaoAtivaPorImovel(_imovel.id),
+        _mensalidadeRepository.buscarMensalidadesPorImovel(_imovel.id),
+        if (_imovel.isVenda)
+          _parcelaVendaRepository.buscarPorImovel(_imovel.id)
+        else
+          Future.value(<ParcelaVendaModel>[]),
+      ]);
 
-      if (_imovel.isVenda) {
-        final parcelas = await _parcelaVendaRepository.buscarPorImovel(
-          _imovel.id,
-        );
-        setState(() {
-          _locacaoAtiva = locacao;
-          _mensalidades = [];
-          _parcelasVenda = parcelas;
-        });
-      } else {
-        List<MensalidadeModel> mensalidadesTemp = [];
-        if (locacao != null) {
-          mensalidadesTemp = await _mensalidadeRepository
-              .buscarMensalidadesPorLocacao(locacao.id);
-        }
-
-        setState(() {
-          _locacaoAtiva = locacao;
-          _mensalidades = mensalidadesTemp;
-          _parcelasVenda = [];
-        });
-      }
+      setState(() {
+        _locacaoAtiva = results[0] as LocacaoModel?;
+        _mensalidades = results[1] as List<MensalidadeModel>;
+        _parcelasVenda = results[2] as List<ParcelaVendaModel>;
+      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -97,8 +85,11 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
     final anoController = TextEditingController(
       text: DateTime.now().year.toString(),
     );
+    final valorPadrao = _imovel.isVenda
+        ? (_imovel.valorMensalVenda ?? 0)
+        : _imovel.valorBaseAluguel;
     final valorController = TextEditingController(
-      text: MoedaBr.formatar(_imovel.valorBaseAluguel),
+      text: MoedaBr.formatar(valorPadrao),
     );
 
     showDialog(
@@ -306,9 +297,11 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
                         ? _buildCardImovelVago(theme)
                         : _buildCardInquilinoAtivo(theme, _locacaoAtiva!),
                     const SizedBox(height: 16),
-                    if (_imovel.isVenda)
-                      ..._buildVendaContent(theme)
-                    else if (_locacaoAtiva != null)
+                    if (_imovel.isVenda) ...[
+                      ..._buildVendaContent(theme),
+                      const SizedBox(height: 16),
+                    ],
+                    if (_locacaoAtiva != null || _mensalidades.isNotEmpty)
                       _buildMensalidadesSection(theme),
                   ],
                 ),
@@ -325,12 +318,13 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('Mensalidades', style: theme.textTheme.titleMedium),
-            OutlinedButton.icon(
-              onPressed: _dialogGerarMensalidade,
-              style: AppButtonStyles.outlinedCompact(context),
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Gerar Cobrança'),
-            ),
+            if (_locacaoAtiva != null)
+              OutlinedButton.icon(
+                onPressed: _dialogGerarMensalidade,
+                style: AppButtonStyles.outlinedCompact(context),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Gerar Cobrança'),
+              ),
           ],
         ),
         const SizedBox(height: 8),
@@ -765,9 +759,13 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
 
   List<Widget> _buildVendaContent(ThemeData theme) {
     final valorVenda = _imovel.valorVenda ?? 0;
-    final totalPago = _parcelasVenda
+    final totalParcelasPagas = _parcelasVenda
         .where((parcela) => parcela.pago)
         .fold<double>(0, (soma, parcela) => soma + parcela.valor);
+    final totalMensalidadesPagas = _mensalidades
+        .where((mensalidade) => mensalidade.pago)
+        .fold<double>(0, (soma, mensalidade) => soma + mensalidade.valor);
+    final totalPago = totalParcelasPagas + totalMensalidadesPagas;
     final restante = valorVenda - totalPago;
 
     return [
@@ -787,6 +785,18 @@ class _DetalhesImovelScreenState extends State<DetalhesImovelScreen> {
                 MoedaBr.reais(totalPago),
                 valueColor: Colors.green.shade700,
               ),
+              if (totalMensalidadesPagas > 0) ...[
+                const SizedBox(height: 8),
+                _infoRow(
+                  'Parcelas da venda',
+                  MoedaBr.reais(totalParcelasPagas),
+                ),
+                const SizedBox(height: 8),
+                _infoRow(
+                  'Mensalidades pagas',
+                  MoedaBr.reais(totalMensalidadesPagas),
+                ),
+              ],
               const SizedBox(height: 8),
               _infoRow(
                 'Restante',
