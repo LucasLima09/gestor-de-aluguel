@@ -22,6 +22,30 @@ class MensalidadeRepository {
     }
   }
 
+  Future<List<MensalidadeModel>> buscarMensalidadesPorImovel(
+    String imovelId,
+  ) async {
+    try {
+      final response = await _supabase
+          .from('mensalidades')
+          .select('''
+            *,
+            locacoes!inner(
+              imovel_id
+            )
+          ''')
+          .eq('locacoes.imovel_id', imovelId)
+          .order('ano_referencia', ascending: false)
+          .order('mes_referencia', ascending: false);
+
+      return (response as List)
+          .map((json) => MensalidadeModel.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Erro ao carregar mensalidades: $e');
+    }
+  }
+
   Future<void> gerarMensalidade(MensalidadeModel mensalidade) async {
     try {
       await _supabase.from('mensalidades').insert(mensalidade.toJson());
